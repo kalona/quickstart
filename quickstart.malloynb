@@ -48,6 +48,8 @@ run: table('duckdb:data/airports.parquet') -> {
   aggregate:
     airport_count is count()
     average_elevation is avg(elevation)
+  order_by:
+  average_elevation desc
   limit: 10
 }
 >>>markdown
@@ -68,6 +70,12 @@ run: table('duckdb:data/airports.parquet') -> {
   limit: 10
   where: county = 'SANTA CRUZ'
   project: code, full_name, city, county
+}
+>>>malloy
+run: table('duckdb:data/airports.parquet') -> {
+    where: county = 'ORANGE'
+    project: code, full_name, city, county
+    limit: 10
 }
 >>>markdown
 ## Everything has a Name
@@ -125,7 +133,10 @@ source: airports is table('duckdb:data/airports.parquet') {
 
 run: airports -> {
   group_by: county_and_state
-  aggregate: airport_count
+  aggregate: 
+  airport_count,
+  average_elevation
+  order_by: average_elevation
   limit: 10
 }
 >>>markdown
@@ -331,6 +342,12 @@ run: table('duckdb:data/flights.parquet') {
 } -> {
   aggregate: flights_last_6_hours is count()
 }
+>>>malloy
+run: table('duckdb:data/flights.parquet') {
+  where: dep_time > now - 18 years
+} -> {
+  aggregate: flights_last_18_years is count()
+}
 >>>markdown
 
 ### Truncation
@@ -342,6 +359,7 @@ run: table('duckdb:data/flights.parquet') -> {
     flight_year is dep_time.year
     flight_month is dep_time.month
   aggregate: flight_count is count()
+  order_by: 1, 2 // Added additionally
   limit: 5
 }
 >>>markdown
